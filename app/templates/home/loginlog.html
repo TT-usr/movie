@@ -1,0 +1,63 @@
+{% extends "home/base.html" %}
+
+{% block content %}
+    {% include "home/menu.html" %}
+
+    <div class="col-md-9">
+        <div class="panel panel-warning">
+            <div class="panel-heading">
+                <h3 class="panel-title"><span class="glyphicon glyphicon-map-marker"></span>&nbsp;登录日志</h3>
+            </div>
+            <div class="panel-body">
+                <table class="table table-bordered">
+                    <tr>
+                        <td style="width:10%">编号</td>
+                        <td style="width:30%">登录时间</td>
+                        <td style="width:30%">登录IP</td>
+                        <td style="width:30%">登录地址</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>2017-01-01 12:00:00</td>
+                        <td>192.168.4.1</td>
+                        <td>云南昆明</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>2017-01-01 12:00:00</td>
+                        <td>192.168.4.1</td>
+                        <td>云南昆明</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>2017-01-01 12:00:00</td>
+                        <td>192.168.4.1</td>
+                        <td>云南昆明</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>2017-01-01 12:00:00</td>
+                        <td>192.168.4.1</td>
+                        <td>云南昆明</td>
+                    </tr>
+                    <tr>
+                        <td>1</td>
+                        <td>2017-01-01 12:00:00</td>
+                        <td>192.168.4.1</td>
+                        <td>云南昆明</td>
+                    </tr>
+
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            $("#m-4").addClass("active")
+        })
+    </script>
+{% endblock %}
