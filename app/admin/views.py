@@ -2,8 +2,30 @@
 
 
 from . import admin
+from flask import render_template, redirect, url_for, Response
+import json
 
 
-@admin.route("/admin")
+@admin.route("/")
 def index():
-    return "<h1 style ='color:red'>后端</h1>"
+    return render_template('admin/index.html')
+
+
+@admin.route('/getName')
+def name():
+    return Response(json.dumps({'name': 'jack'}), mimetype='application/json')
+
+
+@admin.route('/login')
+def login():
+    return render_template('admin/login.html')
+
+
+@admin.route('/logout')
+def logout():
+    return redirect(url_for('admin.login'))
+
+
+@admin.route("/pwd")
+def pwd():
+    return render_template('admin/pwd.html')
