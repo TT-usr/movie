@@ -1,16 +1,7 @@
 # -*- coding: utf-8 -*-
 
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-import pymysql
-
-app = Flask(__name__)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql+pymysql://root:root@127.0.0.1:3306/movie?charset=utf8"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = True
-
-db = SQLAlchemy(app, use_native_unicode="utf8")
+from app import db
 
 
 # 会员的模型
@@ -159,7 +150,7 @@ class Admin(db.Model):
     __tablename__ = "admin"
 
     id = db.Column(db.Integer, primary_key=True)  # 编号
-    name = db.Column(db.String(100), unique=True)  # 昵称
+    name = db.Column(db.String(100), unique=True)  # 用户名
     pwd = db.Column(db.String(100))  # 密码
 
     is_super = db.Column(db.SmallInteger)  # 是否为超管 0 为超管
@@ -173,6 +164,10 @@ class Admin(db.Model):
 
     def __repr__(self):
         return "<Admin %r>" % self.name
+
+    def check_pwd(self, pwd):
+        from werkzeug.security import check_password_hash
+        return check_password_hash(self.pwd, pwd)
 
 
 # 管理登陆日志
@@ -202,9 +197,10 @@ class Oplog(db.Model):
         return "<Oplog %r>" % self.id
 
 
+'''
 if __name__ == "__main__":
     db.create_all()
-    '''
+    
     role = Role(
         name="炒鸡管理员",
         auths=""
