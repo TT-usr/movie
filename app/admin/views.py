@@ -36,10 +36,10 @@ def login():
         data = form.data
         admin = Admin.query.filter_by(name=data['account']).first()
         if not admin:
-            flash("账户不存在!")
+            flash("输入的账户不存在!")
             return redirect(url_for('admin.login'))
         if not admin.check_pwd(data['pwd']):
-            flash("密码错误")
+            flash("用户名与密码不匹配!")
             return redirect(url_for('admin.login'))
         session['admin'] = data['account']
         print(request.args)

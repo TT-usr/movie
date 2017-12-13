@@ -28,7 +28,7 @@
                 <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
                 {% for err in form.account.errors %}
                     <div class="col-md-12">
-                        <font style="color:red">{{ err }}</font>
+                        <span style="color:red">{{ err }}</span>
                     </div>
                 {% endfor %}
             </div>
@@ -37,7 +37,7 @@
                 <span class="glyphicon glyphicon-lock form-control-feedback"></span>
                 {% for err in form.pwd.errors %}
                     <div class="col-md-12">
-                        <font style="color:red">{{ err }}</font>
+                        <span style="color:red">{{ err }}</span>
                     </div>
                 {% endfor %}
             </div>

@@ -12,6 +12,7 @@ class LoginForm(FlaskForm):
             DataRequired("请输入账号!")
         ],
         description="账号",
+        #这个字段相当于给 html 组件添加响应的属性
         render_kw={
             "class": "form-control",
             "placeholder": "请输入账号!",
@@ -41,5 +42,4 @@ class LoginForm(FlaskForm):
         account = field['account']
         admin = Admin.query.filter_by(name=account).count
         if admin == 0:
-            print('a?')
             raise ValidationError(str='账号不存在')
