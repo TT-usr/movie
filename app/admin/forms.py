@@ -12,7 +12,7 @@ class LoginForm(FlaskForm):
             DataRequired("请输入账号!")
         ],
         description="账号",
-        #这个字段相当于给 html 组件添加响应的属性
+        # 这个字段相当于给 html 组件添加响应的属性
         render_kw={
             "class": "form-control",
             "placeholder": "请输入账号!",
@@ -43,3 +43,24 @@ class LoginForm(FlaskForm):
         admin = Admin.query.filter_by(name=account).count
         if admin == 0:
             raise ValidationError(str='账号不存在')
+
+
+class TagForm(FlaskForm):
+    name = StringField(
+        label="名称",
+        validators=[
+            DataRequired("请输入标签!")
+        ],
+        description="标签",
+        render_kw={
+            "class": "form-control",
+            "id": "input_name",
+            "placeholder": "请输入标签名称"
+        }
+    )
+    submit = SubmitField(
+        '编辑',
+        render_kw={
+            "class": " btn btn-primary"
+        }
+    )

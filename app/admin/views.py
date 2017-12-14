@@ -2,9 +2,11 @@
 from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
-from app.admin.forms import LoginForm
-from app.models import Admin
+from app.admin.forms import LoginForm, TagForm
+from app.models import Admin, Tag
 from functools import wraps
+from app import db
+from sqlalchemy import func
 
 
 def admin_login_req(f):
@@ -43,7 +45,7 @@ def login():
             return redirect(url_for('admin.login'))
         session['admin'] = data['account']
         print(request.args)
-        return redirect(request.args.get('next') or url_for('admin.index') )
+        return redirect(request.args.get('next') or url_for('admin.index'))
     return render_template('admin/login.html', form=form)
 
 
@@ -60,16 +62,74 @@ def pwd():
     return render_template('admin/pwd.html')
 
 
-@admin.route('/tag/add')
+@admin.route('/tag/add', methods=['POST', 'GET'])
 @admin_login_req
 def tag_add():
-    return render_template('admin/tag_add.html')
+    form = TagForm()
+    if form.validate_on_submit():
+        data = form.data
+        tagcount = Tag.query.filter_by(name=data['name']).count()
+        if tagcount == 1:
+            flash('名称已经存在', "err")
+            return redirect(url_for('admin.tag_add'))
+        tag = Tag(
+            name=data['name']
+        )
+        db.session.add(tag)
+        db.session.commit()
+        flash('添加标签成功!', 'ok')
+        # return redirect(url_for('admin.tag_list', page=1))
+    return render_template('admin/tag_add.html', form=form)
 
 
-@admin.route("/tag/list")
+@admin.route('/tag/edit/<int:id>', methods=['GET', 'POST'])
 @admin_login_req
-def tag_list():
-    return render_template('admin/tag_list.html')
+def tag_edit(id=None):
+    # if id == None:
+    #     return redirect(url_for('admin.tag_list', page=1))
+    form = TagForm()
+    tag = Tag.query.get_or_404(id)
+    if form.validate_on_submit():
+        data = form.data
+        tagcount = Tag.query.filter_by(name=data['name']).count()
+        if tagcount == 1 and tag.name == data['name']:
+            flash('名称已经存在', "err")
+            return redirect(url_for('admin.tag_edit', id=id))
+        tag.name = data['name']
+        db.session.add(tag)
+        db.session.commit()
+        # db.session.query(Tag.id == tag.id).update({Tag.name: data['name']})
+        return redirect(url_for('admin.list', page=1))
+    return render_template('admin/tag_edit.html', tag=tag, form=form)
+
+
+@admin.route("/tag/list/<int:page>", methods=["get"])
+@admin_login_req
+def tag_list(page=None):
+    if page is None or page == 0:
+        return redirect(url_for('admin.tag_list', page=1))
+    # 查询数量
+    count = db.session.query(func.count('Tag.id')).scalar()
+    # 这里判断是否大于页数
+    per_page = 10
+    if page > int(count / per_page) + 1:
+        return redirect(url_for('admin.tag_list', page=int(count / 10) + 1))
+    page_data = Tag.query.order_by(
+        Tag.addtime.desc()
+    ).paginate(page=page, per_page=per_page)
+    return render_template('admin/tag_list.html', page_data=page_data)
+
+
+@admin.route("/tag/del/<int:id>", methods=["get"])
+@admin_login_req
+def tag_del(id=None):
+    if id == None:
+        return redirect(url_for('admin.tag_list', page=1))
+    tag = Tag.query.filter_by(id=id).first_or_404()
+    db.session.delete(tag)
+    db.session.commit()
+    flash("删除标签成功!", 'ok')
+    return redirect(url_for('admin.tag_list', page=1))
 
 
 @admin.route('/movie/add')
