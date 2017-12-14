@@ -2,13 +2,14 @@
 from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
-from app.admin.forms import LoginForm, TagForm
-from app.models import Admin, Tag
+from app.admin.forms import LoginForm, TagForm, MovieForm
+from app.models import Admin, Tag, Movie
 from functools import wraps
 from app import db
 from sqlalchemy import func
 
 
+# 权限控制的装饰器
 def admin_login_req(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -96,10 +97,10 @@ def tag_edit(id=None):
             flash('名称已经存在', "err")
             return redirect(url_for('admin.tag_edit', id=id))
         tag.name = data['name']
-        db.session.add(tag)
+        # db.session.add(tag)
         db.session.commit()
-        # db.session.query(Tag.id == tag.id).update({Tag.name: data['name']})
-        return redirect(url_for('admin.list', page=1))
+        # db.session.query(Tag.id == tag.id).update({'name': data['name']})
+        return redirect(url_for('admin.tag_list', page=1))
     return render_template('admin/tag_edit.html', tag=tag, form=form)
 
 
@@ -132,10 +133,11 @@ def tag_del(id=None):
     return redirect(url_for('admin.tag_list', page=1))
 
 
-@admin.route('/movie/add')
+@admin.route('/movie/add', methods=['POST','GET'])
 @admin_login_req
 def movie_add():
-    return render_template('admin/movie_add.html')
+    form = MovieForm()
+    return render_template('admin/movie_add.html', form=form)
 
 
 @admin.route("/movie/list")
