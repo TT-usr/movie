@@ -1,0 +1,143 @@
+{% extends 'admin/base.html' %}
+{% import 'admin/blockerr.html' as tips %}
+
+{% block content %}
+    <section class="content-header">
+        <h1>微电影管理系统</h1>
+        <ol class="breadcrumb">
+            <li><a href="#"><i class="fa fa-dashboard"></i> 电影管理</a></li>
+            <li class="active">修改电影</li>
+        </ol>
+    </section>
+    <section class="content" id="showcontent">
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-primary">
+                    <div class="box-header with-border">
+                        <h3 class="box-title">修改电影</h3>
+                    </div>
+                    <form role="form" method="post" , enctype="multipart/form-data">
+                        <div class="box-body">
+                            {{ tips.success(get_flashed_messages(category_filter= ['ok'])) }}
+                            {{ tips.fail(get_flashed_messages(category_filter= ['err'])) }}
+                            <div class="form-group">
+                                <label for="input_title">{{ form.title.label }}</label>
+                                {{ form.title(value=movie.title) }}
+                                {{ tips.tip(form.title.errors) }}
+                            </div>
+                            <div class="form-group">
+                                <label for="input_url">{{ form.url.label }}</label>
+                                {{ form.url }}
+                                {{ tips.tip(form.url.errors) }}
+                                <div style="margin-top:5px;">
+                                    <div id="moviecontainer"></div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="input_info">{{ form.info.label }}</label>
+                                {{ form.info }}
+                                {{ tips.tip(form.info.errors) }}
+                            </div>
+                            <div class="form-group">
+                                <label for="input_logo">{{ form.logo.label }}</label>
+                                {{ form.logo }}
+                                {{ tips.tip(form.logo.errors) }}
+                                <img src="{{ url_for('static',filename='../../static/uploads/'+movie.logo) }}" style="margin-top:5px;" class="img-responsive"
+                                     alt="">
+                            </div>
+                            <div class="form-group">
+                                <label for="input_star">{{ form.star.label }}</label>
+                                {{ form.star }}
+                                {{ tips.tip(form.star.errors) }}
+                            </div>
+                            <div class="form-group">
+                                <label for="input_tag_id">{{ form.tag_id.label }}</label>
+                                {{ form.tag_id }}
+                                {{ tips.tip(form.tag_id.errors) }}
+                            </div>
+                            <div class="form-group">
+                                <label for="input_area">{{ form.area.label }}</label>
+                                {{ form.area(value=movie.area) }}
+                                {{ tips.tip(form.area.errors) }}
+                            </div>
+                            <div class="form-group">
+                                <label for="input_length">{{ form.length.label }}</label>
+                                {{ form.length(value=movie.length) }}
+                                {{ tips.tip(form.length.errors) }}
+                            </div>
+                            <div class="form-group">
+                                <label for="input_release_time">{{ form.release_time.label }}</label>
+                                {{ form.release_time(value=movie.release_time) }}
+                                {{ tips.tip(form.release_time.errors) }}
+                            </div>
+                        </div>
+                        <div class="box-footer">
+                            {{ form.csrf_token }}
+                            {{ form.submit }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block js %}
+    <script>
+        $(document).ready(function () {
+            $('#g-3').addClass('active');
+            $('#g-3-1').addClass('active');
+        })
+    </script>
+    <script>
+        $(document).ready(function () {
+            $('#input_release_time').datepicker({
+                autoclose: true,
+                format: 'yyyy-mm-dd',
+                language: 'zh-CN',
+            });
+        });
+
+    </script>
+    <!--播放页面-->
+    <script src={{ url_for('static', filename = '../../static/jwplayer/jwplayer.js') }}></script>
+    <script>
+
+        var ue = UE.getEditor('input_content', {
+            toolbars: [
+                ['fullscreen', 'emotion', 'preview', 'link']
+            ],
+            initialFrameWidth: "100%",
+            initialFrameHeight: "100",
+        });
+
+    </script>
+    <script type="text/javascript">
+        {#这个 key 一定要先于播放器注册#}
+        jwplayer.key = "P9VTqT/X6TSP4gi/hy1wy23BivBhjdzVjMeOaQ==";
+    </script>
+    <script type="text/javascript">
+        jwplayer("moviecontainer").setup({
+            flashplayer: "{{ url_for('static', filename = '../../static/jwplayer/jwplayer.flash.swf') }}",
+            playlist: [{
+                file: "{{ url_for('static', filename = '../../static/uploads/'+movie.url) }}",
+                title: "{{ movie.title }}"
+            }],
+            modes: [{
+                type: "html5"
+            }, {
+                type: "flash",
+                src: "{{ url_for('static', filename = '../../static/jwplayer/jwplayer.flash.swf') }}"
+            }, {
+                type: "download"
+            }],
+            skin: {
+                name: "vapor"
+            },
+            "playlist.position": "left",
+            "playlist.size": 400,
+            height: 500,
+            width: 774,
+        });
+    </script>
+{% endblock %}

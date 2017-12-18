@@ -142,27 +142,47 @@ def tag_del(id=None):
     return redirect(url_for('admin.tag_list', page=1))
 
 
+def save_path():
+    if not os.path.exists(app.config["UP_DIR"]):
+        os.makedirs(app.config["UP_DIR"])
+        os.chmod(app.config["UP_DIR"], "rw")
+
+
+def save_url(form):
+    logo = save_photo(form)
+    url = save_url(form)
+    return [url, logo]
+
+
+def save_photo(form):
+    save_path()
+    file_logo = secure_filename(form.logo.data.filename)
+    logo = change_filename(file_logo)
+    form.logo.data.save(app.config["UP_DIR"] + logo)
+    return logo
+
+
+def save_video(form):
+    save_path()
+    file_url = secure_filename(form.url.data.filename)
+    url = change_filename(file_url)
+    form.url.data.save(app.config["UP_DIR"] + url)
+    return url
+
+
 @admin.route('/movie/add', methods=['POST', 'GET'])
 @admin_login_req
 def movie_add():
     form = MovieForm()
     if form.validate_on_submit():
         data = form.data
-        file_url = secure_filename(form.url.data.filename)
-        file_logo = secure_filename(form.logo.data.filename)
-        if not os.path.exists(app.config["UP_DIR"]):
-            os.makedirs(app.config["UP_DIR"])
-            os.chmod(app.config["UP_DIR"], "rw")
-        url = change_filename(file_url)
-        logo = change_filename(file_logo)
-        form.url.data.save(app.config["UP_DIR"]+url)
-        form.logo.data.save(app.config["UP_DIR"] + logo)
+        source = save_url(form)
         movie = Movie(
             title=data['title'],
-            url=url,
+            url=source[0],
             info=data['info'],
             star=int(data['star']),
-            logo=logo,
+            logo=source[-1],
             playnum=0,
             commentnum=0,
             tag_id=int(data['tag_id']),
@@ -177,10 +197,70 @@ def movie_add():
     return render_template('admin/movie_add.html', form=form)
 
 
-@admin.route("/movie/list")
+@admin.route("/movie/list/<int:page>", methods=['GET'])
 @admin_login_req
-def movie_list():
-    return render_template('admin/movie_list.html')
+def movie_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Movie.query.join(Tag).filter(
+        Tag.id == Movie.tag_id
+    ).order_by(
+        Movie.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    print(page_data)
+    return render_template('admin/movie_list.html', page_data=page_data)
+
+
+@admin.route('/movie/del/<int:id>', methods=["GET"])
+@admin_login_req
+def movie_del(id=None):
+    if id == None:
+        pass
+    movie = Movie.query.get_or_404(int(id))
+    db.session.delete(movie)
+    db.session.commit()
+    flash("删除电影成功!", 'ok')
+    return redirect(url_for("admin.movie_list", page=1))
+
+
+@admin.route('movie/edit/<int:id>', methods=['GET', 'POST'])
+@admin_login_req
+def movie_edit(id=None):
+    form = MovieForm()
+    form.url.validators = []
+    form.logo.validators = []
+    if id == None:
+        pass
+    movie = Movie.query.get_or_404(int(id))
+    if request.method == 'GET':
+        form.info.data = movie.info
+        form.tag_id.data = movie.tag_id
+        form.star.data = movie.star
+    if form.validate_on_submit():
+        data = form.data
+        movie_count = Movie.query.filter_by(title=data['title']).count
+        if movie_count == 1 and movie.title != data['title']:
+            flash('片名已经存在', 'err')
+            return redirect(url_for('admin.movie.edit', id=id))
+        # 判断是否更改了图片/视频
+        if form.url.data.filename != "":
+            movie.url = save_url(form)
+        if form.logo.data.filename != "":
+            movie.log = save_photo(form)
+
+        movie.title = data['title'],
+        movie.info = data['info'],
+        movie.star = int(data['star']),
+        movie.playnum = 0,
+        movie.commentnum = 0,
+        movie.tag_id = int(data['tag_id']),
+        movie.area = data['area'],
+        movie.release_time = data['release_time'],
+        movie.length = data["length"],
+        db.session.add(movie)
+        db.session.commit()
+        flash('修改电影信息成功!', 'ok')
+    return render_template('admin/movie_edit.html', form=form, movie=movie)
 
 
 @admin.route('/preview/add')
