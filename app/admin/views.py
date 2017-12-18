@@ -3,7 +3,7 @@ from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
 from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm
-from app.models import Admin, Tag, Movie, Preview
+from app.models import Admin, Tag, Movie, Preview, User
 from functools import wraps
 from app import db, app
 from sqlalchemy import func
@@ -326,16 +326,34 @@ def preview_list(page=None):
     return render_template('admin/preview_list.html', page_data=page_data)
 
 
-@admin.route('/user/view')
+@admin.route('/user/view/<int:id>', methods=['GET'])
 @admin_login_req
-def user_view():
-    return render_template('admin/user_view.html')
+def user_view(id=None):
+    if id == None:
+        pass
+    user = User.query.get_or_404(int(id))
+    return render_template('admin/user_view.html', user=user)
 
 
-@admin.route("/user/list")
+@admin.route('/user/del/<int:id>', methods=['GET'])
 @admin_login_req
-def user_list():
-    return render_template('admin/user_list.html')
+def user_del(id=None):
+    if id == None:
+        pass
+    user = User.query.get_or_404(int(id))
+    db.session.delete(user)
+    db.session.commit()
+    flash('删除用户成功!','ok')
+    return redirect(url_for('admin.user_list', page=1))
+
+
+@admin.route("/user/list/<int:page>", methods=['GET'])
+@admin_login_req
+def user_list(page=None):
+    if page == None:
+        page = 1
+    page_data = User.query.order_by(User.addtime.desc()).paginate(page, 10)
+    return render_template('admin/user_list.html', page_data=page_data)
 
 
 @admin.route("/comment/list")
