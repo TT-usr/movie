@@ -278,8 +278,43 @@ def preview_add():
         db.session.add(preview)
         db.session.commit()
         flash('添加预告成功!', 'ok')
-
     return render_template('admin/preview_add.html', form=form)
+
+
+@admin.route('/preview/edit/<int:id>', methods=['GET', 'POST'])
+@admin_login_req
+def preview_edit(id=None):
+    if id == None:
+        pass
+    form = PreviewForm()
+    form.logo.validators = []
+    preview = Preview.query.get_or_404(int(id))
+    if request.method == 'GET':
+        form.title.data = preview.title
+        form.logo.data = preview.logo
+    if form.validate_on_submit():
+        data = form.data
+        if form.logo.data.filename != '':
+            preview.logo = save_photo(form)
+        preview.title = data['title']
+        db.session.add(preview)
+        db.session.commit()
+        flash('修改预告成功!', 'ok')
+        return redirect(url_for('admin.preview_edit', id=id))
+
+    return render_template('admin/preview_edit.html', form=form, preview=preview)
+
+
+@admin.route('/preview/del/<int:id>', methods=["GET"])
+@admin_login_req
+def preview_del(id=None):
+    if id == None:
+        pass
+    preview = Preview.query.get_or_404(int(id))
+    db.session.delete(preview)
+    db.session.commit()
+    flash("删除预告成功!", 'ok')
+    return redirect(url_for("admin.preview_list", page=1))
 
 
 @admin.route("/preview/list/<int:page>", methods=['GET'])

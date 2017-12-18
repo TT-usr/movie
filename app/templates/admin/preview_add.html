@@ -21,7 +21,7 @@
                             {{ tips.fail(get_flashed_messages(category_filter= ['err'])) }}
                             <div class="form-group">
                                 <label for="input_title">{{ form.title.label }}</label>
-                                {{ form.title }}
+                                {{ form.title(value='') }}
                                 {{ tips.tip(form.title.errors) }}
                             </div>
                             <div class="form-group">
