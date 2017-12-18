@@ -2,8 +2,8 @@
 from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
-from app.admin.forms import LoginForm, TagForm, MovieForm
-from app.models import Admin, Tag, Movie
+from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm
+from app.models import Admin, Tag, Movie, Preview
 from functools import wraps
 from app import db, app
 from sqlalchemy import func
@@ -263,16 +263,32 @@ def movie_edit(id=None):
     return render_template('admin/movie_edit.html', form=form, movie=movie)
 
 
-@admin.route('/preview/add')
+@admin.route('/preview/add', methods=['GET', 'POST'])
 @admin_login_req
 def preview_add():
-    return render_template('admin/preview_add.html')
+    form = PreviewForm()
+    if form.validate_on_submit():
+        data = form.data
+        logo = save_photo(form)
+        title = data['title']
+        preview = Preview(
+            title=title,
+            logo=logo
+        )
+        db.session.add(preview)
+        db.session.commit()
+        flash('添加预告成功!', 'ok')
+
+    return render_template('admin/preview_add.html', form=form)
 
 
-@admin.route("/preview/list")
+@admin.route("/preview/list/<int:page>", methods=['GET'])
 @admin_login_req
-def preview_list():
-    return render_template('admin/preview_list.html')
+def preview_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Preview.query.order_by(Preview.addtime.desc()).paginate(page, 10)
+    return render_template('admin/preview_list.html', page_data=page_data)
 
 
 @admin.route('/user/view')
