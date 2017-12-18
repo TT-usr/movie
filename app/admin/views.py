@@ -343,7 +343,7 @@ def user_del(id=None):
     user = User.query.get_or_404(int(id))
     db.session.delete(user)
     db.session.commit()
-    flash('删除用户成功!','ok')
+    flash('删除用户成功!', 'ok')
     return redirect(url_for('admin.user_list', page=1))
 
 
