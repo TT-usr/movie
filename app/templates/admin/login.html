@@ -1,3 +1,5 @@
+{% import 'admin/blockerr.html' as tips %}
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,28 +20,21 @@
         <a href=""><b>微电影管理系统</b></a>
     </div>
     <div class="login-box-body">
-        {% for msg in get_flashed_messages() %}
-            <p class="login-box-msg" style="color:red">{{ msg }}</p>
-        {% endfor %}
+        {{ tips.success(get_flashed_messages(category_filter= ['ok'])) }}
+        {{ tips.fail(get_flashed_messages(category_filter= ['err'])) }}
 
         <form method="post" id="form-data">
             <div class="form-group has-feedback">
                 {{ form.account }}
                 <span class="glyphicon glyphicon-envelope form-control-feedback"></span>
-                {% for err in form.account.errors %}
-                    <div class="col-md-12">
-                        <span style="color:red">{{ err }}</span>
-                    </div>
-                {% endfor %}
+
+            {{ tips.tip(form.account.errors) }}
             </div>
             <div class="form-group has-feedback">
                 {{ form.pwd }}
                 <span class="glyphicon glyphicon-lock form-control-feedback"></span>
-                {% for err in form.pwd.errors %}
-                    <div class="col-md-12">
-                        <span style="color:red">{{ err }}</span>
-                    </div>
-                {% endfor %}
+
+            {{ tips.tip(form.pwd.errors) }}
             </div>
             <div class="row">
                 <div class="col-xs-8">
