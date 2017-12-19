@@ -6,7 +6,7 @@
             {% if data.has_prev %}
                 <li><a href="{{ url_for(url, page=data.prev_num) }}">上一页</a></li>
             {% else %}
-                <li><a href="#">上一页</a></li>
+                <li><a href="">上一页</a></li>
             {% endif %}
 
             {% for v in data.iter_pages() %}
@@ -20,7 +20,7 @@
             {% if data.has_next %}
                 <li><a href="{{ url_for(url, page=data.next_num) }}">下一页</a></li>
             {% else %}
-                <li><a href="#">下一页</a></li>
+                <li><a href="">下一页</a></li>
             {% endif %}
 
             <li><a href="{{ url_for(url, page=data.pages) }}">尾页</a></li>

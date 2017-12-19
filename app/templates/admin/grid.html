@@ -121,17 +121,17 @@
         </a>
         <ul class="treeview-menu">
             <li id="g-8-1">
-                <a href="{{ url_for('admin.optionlog_list') }}">
+                <a href="{{ url_for('admin.optionlog_list', page=1) }}">
                     <i class="fa fa-circle-o"></i> 操作日志列表
                 </a>
             </li>
             <li id="g-8-2">
-                <a href="{{ url_for('admin.adminlog_list') }}">
+                <a href="{{ url_for('admin.adminlog_list', page=1) }}">
                     <i class="fa fa-circle-o"></i> 管理员登录日志列表
                 </a>
             </li>
             <li id="g-8-3">
-                <a href="{{ url_for('admin.userlog_list') }}">
+                <a href="{{ url_for('admin.userlog_list',page=1) }}">
                     <i class="fa fa-circle-o"></i> 会员登录日志列表
                 </a>
             </li>

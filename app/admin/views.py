@@ -3,7 +3,7 @@ from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
 from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, PwdForm
-from app.models import Admin, Tag, Movie, Preview, User, Comment, Moviecol
+from app.models import Admin, Tag, Movie, Preview, User, Comment, Moviecol, Oplog, Adminlog, Userlog
 from functools import wraps
 from app import db, app
 from sqlalchemy import func
@@ -65,7 +65,8 @@ def login():
             flash("用户名与密码不匹配!", 'err')
             return redirect(url_for('admin.login'))
         session['admin'] = data['account']
-        print(request.args)
+        session['admin_id'] = admin.id
+        add_admin_loginlog()
         return redirect(request.args.get('next') or url_for('admin.index'))
     return render_template('admin/login.html', form=form)
 
@@ -74,6 +75,7 @@ def login():
 @admin_login_req
 def logout():
     session.pop('admin', None)
+    session.pop('admin_id', None)
     return redirect(url_for('admin.login'))
 
 
@@ -95,6 +97,25 @@ def pwd():
     return render_template('admin/pwd.html', form=form)
 
 
+def add_admin_loginlog():
+    loginlog = Adminlog(
+        admin_id=session['admin_id'],
+        ip=request.remote_addr,
+    )
+    db.session.add(loginlog)
+    db.session.commit()
+
+
+def add_admin_oplog(reason):
+    oplog = Oplog(
+        admin_id=session['admin_id'],
+        ip=request.remote_addr,
+        reason=reason,
+    )
+    db.session.add(oplog)
+    db.session.commit()
+
+
 @admin.route('/tag/add', methods=['POST', 'GET'])
 @admin_login_req
 def tag_add():
@@ -111,6 +132,7 @@ def tag_add():
         db.session.add(tag)
         db.session.commit()
         flash('添加标签成功!', 'ok')
+        add_admin_oplog("添加标签%s" % data['name'])
         # return redirect(url_for('admin.tag_list', page=1))
     return render_template('admin/tag_add.html', form=form)
 
@@ -439,22 +461,50 @@ def moviecol_del(id=None):
     return redirect(url_for('admin.moviecol_list', page=1))
 
 
-@admin.route("/log_list/option")
+@admin.route("/log_list/option/<int:page>", methods=['GET'])
 @admin_login_req
-def optionlog_list():
-    return render_template('admin/log_option_list.html')
+def optionlog_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Oplog.query.join(
+        Admin
+    ).filter(
+        Admin.id == Oplog.admin_id,
+    ).order_by(
+        Oplog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+
+    return render_template('admin/log_option_list.html', page_data=page_data)
 
 
-@admin.route("/log_list/admin")
+@admin.route("/log_list/admin/<int:page>", methods=['GET'])
 @admin_login_req
-def adminlog_list():
-    return render_template('admin/log_admin_list.html')
+def adminlog_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Adminlog.query.join(
+        Admin
+    ).filter(
+        Admin.id == Adminlog.admin_id,
+    ).order_by(
+        Adminlog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template('admin/log_admin_list.html', page_data=page_data)
 
 
-@admin.route("/log_list/user")
+@admin.route("/log_list/user/<int:page>", methods=['GET'])
 @admin_login_req
-def userlog_list():
-    return render_template('admin/log_user_list.html')
+def userlog_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Userlog.query.join(
+        User
+    ).filter(
+        User.id == Userlog.user_id,
+    ).order_by(
+        Userlog.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template('admin/log_user_list.html', page_data=page_data)
 
 
 @admin.route("/auth/list")
