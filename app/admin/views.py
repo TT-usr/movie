@@ -3,7 +3,7 @@ from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
 from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm
-from app.models import Admin, Tag, Movie, Preview, User, Comment
+from app.models import Admin, Tag, Movie, Preview, User, Comment, Moviecol
 from functools import wraps
 from app import db, app
 from sqlalchemy import func
@@ -382,14 +382,38 @@ def comment_del(id=None):
     comment = Comment.query.get_or_404(int(id))
     db.session.delete(comment)
     db.session.commit()
-    flash('删除用户成功!', 'ok')
+    flash('删除评论成功!', 'ok')
     return redirect(url_for('admin.comment_list', page=1))
 
 
-@admin.route("/moviecol/list")
+@admin.route("/moviecol/list/<int:page>", methods=['GET'])
 @admin_login_req
-def moviecol_list():
-    return render_template('admin/moviecol_list.html')
+def moviecol_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Moviecol.query.join(
+        Movie
+    ).join(
+        User
+    ).filter(
+        Movie.id == Moviecol.movie_id,
+        User.id == Moviecol.user_id
+    ).order_by(
+        Moviecol.addtime.desc()
+    ).paginate(page, 10)
+    return render_template('admin/moviecol_list.html', page_data=page_data)
+
+
+@admin.route('/moviecol/del/<int:id>', methods=['GET'])
+@admin_login_req
+def moviecol_del(id=None):
+    if id == None:
+        pass
+    moviecol = Moviecol.query.get_or_404(int(id))
+    db.session.delete(moviecol)
+    db.session.commit()
+    flash('删除收藏成功!', 'ok')
+    return redirect(url_for('admin.moviecol_list', page=1))
 
 
 @admin.route("/log_list/option")
