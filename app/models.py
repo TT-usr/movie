@@ -17,11 +17,8 @@ class User(db.Model):
     face = db.Column(db.String(255), unique=True)  # 头像
     addtime = db.Column(db.DateTime, index=True, default=datetime.now)  # 注册时间
     uuid = db.Column(db.String(255), unique=True)
-
     userlogs = db.relationship('Userlog', backref='user')
-
     comment = db.relationship('Comment', backref='user')
-
     moviecols = db.relationship('Moviecol', backref='user')
 
     def __repr__(self):
@@ -71,9 +68,7 @@ class Movie(db.Model):
     release_time = db.Column(db.Date)
     length = db.Column(db.String(100))
     addtime = db.Column(db.DateTime, index=True, default=datetime.now)
-
     comment = db.relationship('Comment', backref='movie')
-
     moviecols = db.relationship('Moviecol', backref='movie')
 
     def __repr__(self):
@@ -152,13 +147,9 @@ class Admin(db.Model):
     id = db.Column(db.Integer, primary_key=True)  # 编号
     name = db.Column(db.String(100), unique=True)  # 用户名
     pwd = db.Column(db.String(100))  # 密码
-
     is_super = db.Column(db.SmallInteger)  # 是否为超管 0 为超管
-
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
-
     addtime = db.Column(db.DateTime, index=True, default=datetime.now)
-
     adminlogs = db.relationship('Adminlog', backref='admin')
     adminoplog = db.relationship('Oplog', backref='admin')
 

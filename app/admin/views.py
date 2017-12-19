@@ -2,8 +2,8 @@
 from . import admin
 from flask import render_template, redirect, url_for, Response, flash, session, request
 import json
-from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, PwdForm
-from app.models import Admin, Tag, Movie, Preview, User, Comment, Moviecol, Oplog, Adminlog, Userlog
+from app.admin.forms import LoginForm, TagForm, MovieForm, PreviewForm, PwdForm, AuthForm
+from app.models import Admin, Tag, Movie, Preview, User, Comment, Moviecol, Oplog, Adminlog, Userlog, Auth
 from functools import wraps
 from app import db, app
 from sqlalchemy import func
@@ -261,10 +261,14 @@ def movie_list(page=None):
 def movie_del(id=None):
     if id == None:
         pass
-    movie = Movie.query.get_or_404(int(id))
+    try:
+        movie = Movie.query.get_or_404(int(id))
+    except:
+        add_admin_oplog('删除<movie_id = %s>电影失败! 原因:电影不存在' % id)
     db.session.delete(movie)
     db.session.commit()
     flash("删除电影成功!", 'ok')
+    add_admin_oplog('删除<movie_id = %s>电影成功!' % id)
     return redirect(url_for("admin.movie_list", page=1))
 
 
@@ -276,7 +280,13 @@ def movie_edit(id=None):
     form.logo.validators = []
     if id == None:
         pass
-    movie = Movie.query.get_or_404(int(id))
+    try:
+        movie = Movie.query.get_or_404(int(id))
+    except:
+        add_admin_oplog('编辑<movie_id = %s>电影失败! 原因:电影不存在' % id)
+        flash('编辑电影失败,找不到您想编辑的电影信息!', 'err')
+        return redirect(url_for('admin.movie_list', page=1))
+
     if request.method == 'GET':
         form.info.data = movie.info
         form.tag_id.data = movie.tag_id
@@ -286,6 +296,7 @@ def movie_edit(id=None):
         movie_count = Movie.query.filter_by(title=data['title']).count
         if movie_count == 1 and movie.title != data['title']:
             flash('片名已经存在', 'err')
+            add_admin_oplog('修改<movie_id = %s>预告失败,片名已存在!' % id)
             return redirect(url_for('admin.movie.edit', id=id))
         # 判断是否更改了图片/视频
         if form.url.data.filename != "":
@@ -323,6 +334,7 @@ def preview_add():
         db.session.add(preview)
         db.session.commit()
         flash('添加预告成功!', 'ok')
+        add_admin_oplog('添加<name = %s>预告成功!' % preview.name)
     return render_template('admin/preview_add.html', form=form)
 
 
@@ -345,6 +357,7 @@ def preview_edit(id=None):
         db.session.add(preview)
         db.session.commit()
         flash('修改预告成功!', 'ok')
+        add_admin_oplog('修改<name = %s>预告成功!' % preview.name)
         return redirect(url_for('admin.preview_edit', id=id))
 
     return render_template('admin/preview_edit.html', form=form, preview=preview)
@@ -359,6 +372,7 @@ def preview_del(id=None):
     db.session.delete(preview)
     db.session.commit()
     flash("删除预告成功!", 'ok')
+    add_admin_oplog('删除<name = %s>预告成功!' % preview.name)
     return redirect(url_for("admin.preview_list", page=1))
 
 
@@ -389,6 +403,7 @@ def user_del(id=None):
     db.session.delete(user)
     db.session.commit()
     flash('删除用户成功!', 'ok')
+    add_admin_oplog('删除<name = %s>用户成功!' % user.name)
     return redirect(url_for('admin.user_list', page=1))
 
 
@@ -428,6 +443,7 @@ def comment_del(id=None):
     db.session.delete(comment)
     db.session.commit()
     flash('删除评论成功!', 'ok')
+    add_admin_oplog('删除<%s>评论成功!' % comment.name)
     return redirect(url_for('admin.comment_list', page=1))
 
 
@@ -457,7 +473,8 @@ def moviecol_del(id=None):
     moviecol = Moviecol.query.get_or_404(int(id))
     db.session.delete(moviecol)
     db.session.commit()
-    flash('删除评论成功!', 'ok')
+    flash('删除收藏成功!', 'ok')
+    add_admin_oplog('删除<movie_id = %s>的收藏记录成功!' % moviecol.movie_id)
     return redirect(url_for('admin.moviecol_list', page=1))
 
 
@@ -507,16 +524,65 @@ def userlog_list(page=None):
     return render_template('admin/log_user_list.html', page_data=page_data)
 
 
-@admin.route("/auth/list")
+@admin.route("/auth/list/<int:page>", methods=['GET'])
 @admin_login_req
-def auth_list():
-    return render_template('admin/auth_list.html')
+def auth_list(page=None):
+    if page == None:
+        page = 1
+    page_data = Auth.query.order_by(
+        Auth.addtime.desc()
+    ).paginate(page=page, per_page=10)
+    return render_template('admin/auth_list.html', page_data=page_data)
 
 
-@admin.route("/auth/add")
+@admin.route("/auth/add", methods=['GET', 'POST'])
 @admin_login_req
 def auth_add():
-    return render_template('admin/auth_add.html')
+    form = AuthForm()
+    if form.validate_on_submit():
+        data = form.data
+        auth = Auth(
+            name=data['name'],
+            url=data['url']
+        )
+        db.session.add(auth)
+        db.session.commit()
+        flash('添加权限成功!', 'ok')
+        add_admin_oplog('添加<%s>权限成功!' % auth.name)
+        return redirect(url_for('admin.auth_list', page=1))
+    return render_template('admin/auth_add.html', form=form)
+
+
+@admin.route('/auth/del/<int:id>', methods=['GET'])
+@admin_login_req
+def auth_del(id=None):
+    auth = Auth.query.get_or_404(int(id))
+    db.session.delete(auth)
+    db.session.commit()
+    flash('删除权限成功!', 'ok')
+    add_admin_oplog('删除<%s>权限成功!' % auth.name)
+    return redirect(url_for('admin.auth_list', page=1))
+
+
+@admin.route("/auth/edit/<int:id>", methods=['GET', 'POST'])
+@admin_login_req
+def auth_edit(id=None):
+    form = AuthForm()
+    auth = Auth.query.get_or_404(int(id))
+    if request.method == 'GET':
+        form.name.data = auth.name
+        form.url.data = auth.url
+    if form.validate_on_submit():
+        data = form.data
+        print(form.data)
+        auth.name = data['name']
+        auth.url = data['url']
+        db.session.add(auth)
+        db.session.commit()
+        flash('修改权限成功!', 'ok')
+        add_admin_oplog('编辑<%s>权限成功!' % auth.name)
+        return redirect(url_for('admin.auth_list', page=1))
+    return render_template('admin/auth_edit.html', form=form)
 
 
 @admin.route("/role/list")
