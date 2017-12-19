@@ -46,12 +46,6 @@ def index():
     return render_template('admin/index.html')
 
 
-@admin.route('/getName')
-@admin_login_req
-def name():
-    return Response(json.dumps({'name': 'jack'}), mimetype='application/json')
-
-
 @admin.route('/login', methods=['POST', 'GET'])
 def login():
     form = LoginForm()
