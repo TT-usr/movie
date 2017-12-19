@@ -11,6 +11,17 @@ from werkzeug.utils import secure_filename
 import os, uuid, datetime
 
 
+# 上下文处理器
+# 可以理解为模版内可以使用的全局变量
+# 使用方法为 : 直接 {{ key }} 即可
+@admin.context_processor
+def tpl_extra():
+    data = dict(
+        online_time=datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    )
+    return data
+
+
 # 权限控制的装饰器
 def admin_login_req(f):
     @wraps(f)
