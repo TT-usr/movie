@@ -12,7 +12,7 @@
         <h1>微电影管理系统</h1>
         <ol class="breadcrumb">
             <li><a href="#"><i class="fa fa-dashboard"></i> 角色管理</a></li>
-            <li class="active">添加角色</li>
+            <li class="active">修改角色</li>
         </ol>
     </section>
     <section class="content" id="showcontent">
@@ -29,7 +29,7 @@
 
                             <div class="form-group">
                                 <label for="input_name">{{ form.name.label }}</label>
-                                {{ form.name }}
+                                {{ form.name(value=role.name) }}
                                 {{ tips.tip(form.name.errors) }}
                             </div>
                             <div class="form-group" id="auth_list">

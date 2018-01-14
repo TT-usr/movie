@@ -1,6 +1,8 @@
 from . import api
 from flask import render_template, redirect, url_for, Response, request
 import json
+from google import protobuf
+
 
 
 # 这里是提供 API 的接口
