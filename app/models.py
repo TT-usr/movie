@@ -189,8 +189,9 @@ class Oplog(db.Model):
         return "<Oplog %r>" % self.id
 
 
-'''
+
 if __name__ == "__main__":
+
     db.create_all()
     
     role = Role(
@@ -210,4 +211,4 @@ if __name__ == "__main__":
     )
     db.session.add(admin)
     db.session.commit()
-    '''
+
