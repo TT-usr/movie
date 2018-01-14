@@ -13,4 +13,4 @@ from app import app
 # gunicorn 就要这个变量
 # 没有为什么,必须要这个文件..
 
-application = app.app
+application = app
